@@ -1,9 +1,8 @@
-﻿namespace GameCool
+﻿namespace ProjectPhaseOne
 {
-	 
 	interface IInteractable
 	{
-		void Interact(Player player);
-
+        // Used when the player interacts with an NPC (Merchant)
+        void Interact(Player player) { }
 	}
 }

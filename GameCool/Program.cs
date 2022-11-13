@@ -1,61 +1,38 @@
-﻿namespace GameCool
+﻿namespace ProjectPhaseOne
 {
-    class Program
+    internal class Program
     {
-        public static void Main(string[] args)
+        static void Main(string[] args)
         {
-            Location location = new Location(21, 21);
-            Player player = new Player(location);
-            player.goldAmount = 300.0;
-            player.AddItem(new Map());// giving map to player
-			try
-			{
-				Console.WriteLine("From which merchent do you want to trade?");
-				Console.WriteLine("1 - Weapon Merchant");
-				Console.WriteLine("2 - Armor Merchant");
-				Console.WriteLine("3 - Potion Merchant");
-				int input = Convert.ToInt32(Console.ReadLine());
-				Merchant merchentChoice = input switch
-				{
-					1 => new WeaponMerchant(500.0),
-					2 => new ArmorMerchant(300.0),
-					3 => new PotionMerchant(400.0),
-				};
-				if(input == 1)
-                {
-					merchentChoice.SetPlayerName(player);
-					merchentChoice.Add(new CrossBow());//giving few items to weapon merchant
-					merchentChoice.Add(new Sword());
-					merchentChoice.Interact(player);
-				}
-				else if (input == 2)
-				{
-					merchentChoice.SetPlayerName(player);
-					merchentChoice.Add(new Shield());//giving few items to armor merchant
-					merchentChoice.Add(new DragonSuit());
-					merchentChoice.Interact(player);
-				}
-				else if (input == 3)
-				{
-					merchentChoice.SetPlayerName(player);
-					merchentChoice.Add(new HealingPotion());//giving few items to potion merchant
-					merchentChoice.Add(new RevengePotion());
-					merchentChoice.Add(new WishPotion());
-					merchentChoice.Interact(player);
-				}
-			}
-			catch (FormatException e)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("That is an invalid selection.");
+            int packMaxItems = 10;
+            float packMaxVolume = 20;
+            float packMaxWeight = 30;
+            //Creates the player inventory
+            Inventory pack = new Inventory(packMaxItems, packMaxVolume, packMaxWeight);
+            pack.Add(new Sword());
+            pack.Add(new Map());
 
-			}
-			catch (System.Runtime.CompilerServices.SwitchExpressionException)
-			{
-				Console.WriteLine("You fall into an error");
-			}
-		}
+            //Creates the merchant inventory
+            Inventory pack2 = new Inventory(packMaxItems, packMaxVolume, packMaxWeight);
+            pack2.Add(new Shield());
+            pack2.Add(new HealingPotion());
+
+            //Test the add/remove features of the inventory + sword/map check
+            //InventoryTester.AddEquipment(pack);
+            //InventoryTester.RemoveEquipment(pack);
+            //Console.WriteLine($"\t - Has Map: {pack.HasMap()}");
+            //Console.WriteLine($"\t - Has Sword: {pack.HasSword()}");
+
+            //Creates player and merchant, attaches the proper inventories.
+            Player player = new Player(new Location(0, 0), pack);
+            Merchant merch1 = new Merchant(new Location(0, 0));
+
+            //Interact test
+            merch1.Interact(player);
+
+            PotionMerchant merch2 = new PotionMerchant(new Location(0, 0));
+            ArmorMerchant merch3 = new ArmorMerchant(new Location(0, 0));
+            WeaponMerchant merch4 = new WeaponMerchant(new Location(0, 0));
+        }
     }
-   
 }
-

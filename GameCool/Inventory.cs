@@ -4,133 +4,226 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GameCool
+namespace ProjectPhaseOne
 {
-	class Inventory
-	{
-		private List<InventoryItem> _itemsList= new();
-		/// <summary>
-		/// Adding item to a list in this class 
-		/// </summary>
-		/// <param name="item">item to be add in the list</param>
-		public void Add(InventoryItem item) { _itemsList.Add(item); }
-		/// <summary>
-		/// Removing item from list of this class if that item exist then we will find its index and remove item by index
-		/// </summary>
-		/// <param name="item">incoming item to be removed</param>
-		/// <returns>true if item removed otherwise will return false</returns>
-		public bool Remove(InventoryItem item)
-		{
-			int index = -1;
-			for(int i = 0; i < _itemsList.Count; i++)
-            {
-                if (_itemsList[i].GetName == item.GetName) { index= i; } //stored index in which list contain same item
-            }
-			if (index > -1)
-            {
-				_itemsList.RemoveAt(index);
-				return true;
-			}
-			return false;
-		}
-		/// <summary>
-		/// method checks that if list of this class conatins a map
-		/// </summary>
-		/// <returns>true if list of this class have Map otherwise will return false</returns>
-		public bool HasMap() { return ContainsItem(new Map()); }
-		/// <summary>
-		/// method checks that if list of this class conatins a sword
-		/// </summary>
-		/// <returns>true if list of this class have sword otherwise will return false</returns>
-		public bool HasSword() { return ContainsItem(new Sword()); }
-		/// <summary>
-		/// This method check if the list of Inventory class have the same item to item given in parameter
-		/// </summary>
-		/// <param name="item">incoming item to check</param>
-		/// <returns>true if given item is in list otherwise will return false</returns>
-		public bool ContainsItem(InventoryItem item)
-        {
-			foreach(var listItem in _itemsList) { if (item.GetName() == listItem.GetName()) { return true; } }
-			return false;
-        }
-		public string PrintForPlayer()
-        {
-			string ret = "";
-			foreach (var item in _itemsList)
-			{
-				ret = ret + item.GetName() + "\n";
-			}
-			return ret;
-		}
-		public override string ToString()
-		{
-			string ret = "";
-			foreach (var item in _itemsList)
-			{
-				ret = ret + item.GetName() + "\n"
-					+ $"\t=>It will charge you {item.GetAmount()} \n"
-					+ $"\t=> Action: {item.GetUse()}\n";
-			}
-			return ret;
-		}
-	}
-
-	class InventoryItem
-	{
-		protected ItemNames Name;
-		protected double Amount;
-		protected int Action;
-		protected string Use;
-		public InventoryItem(ItemNames name, double amount, int action, string use){ Name = name;	Amount = amount; Action = action;	Use = use;  }
-		public ItemNames GetName() { return Name; }
-		public double GetAmount() {	return Amount; }
-		public int GetAction() { return Action;	}
-		public string GetUse(){	return Use;	}
-
-
-	}
-	class Weapon : InventoryItem
-	{
-        public Weapon(ItemNames name, double amount, int action, string use) : base(name, amount, action, use) { }
-	}
-	class Potion : InventoryItem
-	{
-		public Potion(ItemNames name, double amount, int action, string use) : base(name, amount, action, use) { }
-	}
-	class Shield : InventoryItem
-	{
-		public Shield() : base(ItemNames.Shield,99.99,0,"To protect the player") { }
-	}
-	class CrossBow : Weapon
-	{
-		public CrossBow() : base(ItemNames.CrossBow, 149.99, 0, "Kill enemies in a single shot") { }
-	}
-	class Sword : Weapon
-	{
-		public Sword() : base(ItemNames.Sword, 49.99, 0, "To face one to one sword fight") { }
-	}
-	class DragonSuit : InventoryItem
-	{
-		public DragonSuit() : base(ItemNames.DragonSuit, 249.99, 0, "A ultra protective powerful armor suit that can reduce the player's damage by 2 times") { }
-	}
-	class Map : InventoryItem
-	{
-		public Map() : base(ItemNames.Map, 9.99, 0, "To show the correct way to victory") { }
-	}
-	class HealingPotion : Potion
-	{
-		public HealingPotion() : base(ItemNames.HealingPotion, 199.99, 100, "Increase Player health by 100") { }
-	}
-	class RevengePotion : Potion
-	{
-		public RevengePotion() : base(ItemNames.RevengePotion, 0.99, -30, "A mysterious potion that may effect health in positive and negetive way.") { }
-	}
-	class WishPotion : Potion
-	{
-		public WishPotion() : base(ItemNames.WishPotion, 299.99, 100, "A Wish potion to make a free item wish with free health increase by 100 .") { }
-	}
-	enum ItemNames
+    /// <summary>
+    /// Inventory container class that holds a characters items.
+    /// Ability to add/remove items.
+    /// </summary>
+    public class Inventory
     {
-		Shield, WishPotion, RevengePotion, HealingPotion, Map, DragonSuit, CrossBow, Sword
-	}
+        public int MaxCount { get; }
+        public float MaxVolume { get; }
+        public float MaxWeight { get; }
+
+        private List<InventoryItem> _items;
+
+        public int CurrentCount { get; private set; }
+        public float CurrentVolume { get; private set; }
+        public float CurrentWeight { get; private set; }
+        public float TotalValue { get; private set; }
+    
+
+        public Inventory(int maxCount, float maxVolume, float maxWeight)
+        {
+            MaxCount = maxCount;
+            MaxVolume = maxVolume;
+            MaxWeight = maxWeight;
+            _items = new List<InventoryItem> { };
+        }
+
+        /// <summary>
+        /// Method to detect the map in the inventory.
+        /// </summary>
+        /// <returns> True - map in inventory | False - map NOT in inventory </returns>
+        public bool HasMap() { return _items.OfType<Map>().Any(); }
+
+        /// <summary>
+        /// Method to detect the sword in the inventory.
+        /// </summary>
+        /// <returns> True - sword in inventory | False - sword NOT in inventory </returns>
+        public bool HasSword() { return _items.OfType<Sword>().Any(); }
+
+
+        /// <summary>
+        /// Adds the specified item to the inventory if within the count/volume/weight limits
+        /// </summary>
+        /// <param name="item"> The item to add to the inventory </param>
+        /// <returns> True/False if the item was within limits or not </returns>
+
+        public InventoryItem GetItemAtIndex(int itemIndex) { return _items[itemIndex]; }
+        public bool Add(InventoryItem item)
+        {
+            if (CurrentCount >= MaxCount) return false;
+            if (CurrentVolume + item.Volume > MaxVolume) return false;
+            if (CurrentWeight + item.Weight > MaxWeight) return false;
+
+            _items.Add(item);
+            CurrentCount++;
+            CurrentVolume += item.Volume;
+            CurrentWeight += item.Weight;
+            TotalValue += item.Value;
+            return true;
+        }
+
+        /// <summary>
+        /// Removes the specified item from the inventory if found
+        /// </summary>
+        /// <param name="item"> The item to add to the inventory </param>
+        /// <returns> True/False if the item was within limits or not </returns>
+        public bool Remove(InventoryItem item)
+        {
+            for (int itemIndex = 0; itemIndex < _items.Count; itemIndex++)
+            {
+                if (item.ToString() == _items[itemIndex].ToString()) 
+                { 
+                    _items.RemoveAt(itemIndex);
+                    CurrentCount--;
+                    CurrentVolume -= item.Volume;
+                    CurrentWeight -= item.Weight;
+                    TotalValue -= item.Value;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public InventoryItem RemoveAtIndex(int itemIndex)
+        {
+            InventoryItem item = _items[itemIndex];
+
+            CurrentCount--;
+            CurrentVolume -= _items[itemIndex].Volume;
+            CurrentWeight -= _items[itemIndex].Weight;
+            TotalValue -= _items[itemIndex].Value;
+
+            _items.RemoveAt(itemIndex);
+            return item;
+        }
+     
+
+        public IEnumerator<InventoryItem> GetEnumerator()
+        {
+            return _items.GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            if (_items.Count == 0) return "{\n\tEmpty\n}";
+            string ret = "{";
+            foreach (InventoryItem item in _items)
+            {
+                ret += $"\n\t- {item.ToString()} - {item.Value} G";
+            }
+            ret += "\n}\n";
+            return ret;
+        }
+
+        public (string items, int itemCount) GetIndexedInventory()
+        {
+            string ret = "\nItem Index\t-\tItem Name\t-\tValue";
+            int itemIndex = 1;
+            foreach (InventoryItem item in _items)
+            {
+                ret += $"\n\t{itemIndex}\t-\t{item}\t\t-\t{item.Value} Gold coins";
+                itemIndex++;
+            }
+            return (items: ret, itemCount: itemIndex);
+        }
+    }
+
+    static class InventoryTester
+    {
+        static public void AddEquipment(Inventory inventory)
+        {
+            bool addMoreItems = true;
+            do
+            {
+                Console.WriteLine($"Inventory is currently at {inventory.CurrentCount}/{inventory.MaxCount} items, {inventory.CurrentWeight}/{inventory.MaxWeight} weight," +
+                                  $" {inventory.CurrentVolume}/{inventory.MaxVolume} volume, and {inventory.TotalValue} total value.");
+                Console.WriteLine(inventory.ToString());
+                Console.WriteLine("What do you want to add?");
+                Console.WriteLine("1 - Sword");
+                Console.WriteLine("2 - Map");
+                Console.WriteLine("3 - Shield");
+                Console.WriteLine("4 - Healing Potion");
+                Console.WriteLine("5 - Next - Remove Items");
+
+                try
+                {
+                    int choice = Convert.ToInt32(Console.ReadLine());
+                    InventoryItem newItem = choice switch
+                    {
+                        1 => new Sword(),
+                        2 => new Map(),
+                        3 => new Shield(),
+                        4 => new HealingPotion()
+                    };
+                    if (!inventory.Add(newItem))
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Could not fit this item into the inventory.");
+                    }
+                }
+                catch (FormatException)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("That is an invalid selection.");
+
+                }
+                catch (System.Runtime.CompilerServices.SwitchExpressionException)
+                {
+                    Console.WriteLine("Venturing Forth!");
+                    addMoreItems = false;
+                }
+                Console.ResetColor();
+            } while (addMoreItems);
+        }
+
+        static public void RemoveEquipment(Inventory inventory)
+        {
+            bool remMoreItems = true;
+            do
+            {
+                Console.WriteLine($"Inventory is currently at {inventory.CurrentCount}/{inventory.MaxCount} items, {inventory.CurrentWeight}/{inventory.MaxWeight} weight," +
+                                  $" {inventory.CurrentVolume}/{inventory.MaxVolume} volume, and {inventory.TotalValue} total value."); 
+                Console.WriteLine(inventory.ToString());
+                Console.WriteLine("What do you want to Remove?");
+                Console.WriteLine("1 - Sword");
+                Console.WriteLine("2 - Map");
+                Console.WriteLine("3 - Shield");
+                Console.WriteLine("4 - Healing Potion");
+                Console.WriteLine("5 - Gather your inventory and venture forth");
+
+                try
+                {
+                    int choice = Convert.ToInt32(Console.ReadLine());
+                    InventoryItem remItem = choice switch
+                    {
+                        1 => new Sword(),
+                        2 => new Map(),
+                        3 => new Shield(),
+                        4 => new HealingPotion()
+                    };
+                    if (!inventory.Remove(remItem))
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Could not find this item into the inventory.");
+                    }
+                }
+                catch (FormatException)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("That is an invalid selection.");
+
+                }
+                catch (System.Runtime.CompilerServices.SwitchExpressionException)
+                {
+                    Console.WriteLine("Venturing Forth!");
+                    remMoreItems = false;
+                }
+                Console.ResetColor();
+            } while (remMoreItems);
+        }
+    }
 }
