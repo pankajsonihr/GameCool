@@ -1,4 +1,4 @@
-﻿namespace ProjectPhaseOne
+﻿namespace GameCool
 {
     public class Player
     {

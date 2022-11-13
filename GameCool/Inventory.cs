@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectPhaseOne
+namespace GameCool
 {
     /// <summary>
     /// Inventory container class that holds a characters items.
